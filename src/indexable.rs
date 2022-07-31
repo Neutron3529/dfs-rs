@@ -1,7 +1,8 @@
 use std::ops::{Index, IndexMut};
-pub trait Op<T> {
+pub trait Op<T> where Self:Sized{
     fn r#do(&mut self, status: &mut T);
     fn undo(&mut self, status: &mut T);
+    fn chain<W:Op<T>>(self,other:W)->Chain<Self,W,T>{Chain(self,other,[])}
 }
 impl<T> Op<T> for (){
     fn r#do(&mut self, _: &mut T){}
@@ -217,7 +218,7 @@ mod tests {
         let mut d=Assign(5,8);
         d.r#do(&mut a);
         assert!(a==[1,1,2,3,5,8]);
-        let mut chain=Chain::new().chain(b).chain(c).chain(d);
+        let mut chain=b.chain(c).chain(d);
         chain.undo(&mut a);
         assert!(a==[0,1,2,3,4,5]);
     }
